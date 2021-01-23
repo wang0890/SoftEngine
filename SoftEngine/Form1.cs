@@ -42,6 +42,7 @@ namespace SoftEngine
             mera.Position = new Vector3(0, 0, 0.05f);
             mera.Target = Vector3.Zero;
             stopwatch.Start();
+
         }
         int i = 0;
         private void Form1_Paint_1(object sender, PaintEventArgs e)
@@ -82,14 +83,14 @@ namespace SoftEngine
             device.Render(mera, mesh);
             // Flushing the back buffer into the front buffer
             device.Present(grfc);
-
-            //Console.WriteLine(stopwatch.ElapsedMilliseconds - runTIme);
-            //runTIme = stopwatch.ElapsedMilliseconds;
+            grfc.DrawString((stopwatch.ElapsedMilliseconds - runTIme).ToString(), new Font("宋体", 28), new SolidBrush(Color.Blue), new PointF(160, 160));
+            runTIme = stopwatch.ElapsedMilliseconds;
         }
+
         private void timer1_Tick(object sender, EventArgs e)
         {
-            Console.WriteLine(stopwatch.ElapsedMilliseconds - runTIme);
-            runTIme = stopwatch.ElapsedMilliseconds;
+            //Console.WriteLine(stopwatch.ElapsedMilliseconds - runTIme);
+            //runTIme = stopwatch.ElapsedMilliseconds;
             Rectangle rectangle = new Rectangle(0, 0, 600, 480);
             this.Invalidate(rectangle, false);
         }

@@ -2,20 +2,24 @@
 using System.Numerics;
 using System.Drawing;
 using System;
+using System.Threading.Tasks;
+using System.IO;
 
 namespace SoftEngine
 {
     public class Device
     {
-        private int[] backBuffer;
+        private byte[] backBuffer;
         private Bitmap bmp;
+        PointBitmap lockbmp;
 
         public Device(Bitmap bmp)
         {
             this.bmp = bmp;
             // the back buffer size is equal to the number of pixels to draw
             // on screen (width*height) * 4 (R,G,B & Alpha values). 
-            backBuffer = new int[bmp.Width * bmp.Height * 4];
+            backBuffer = new byte[bmp.Width * bmp.Height * 4];
+            lockbmp = new PointBitmap(bmp);
         }
 
         // This method is called to clear the back buffer with a specific color
@@ -35,22 +39,28 @@ namespace SoftEngine
         // into the front buffer. 
         public void Present(Graphics grfc)
         {
-            PointBitmap lockbmp = new PointBitmap(bmp);
             lockbmp.LockBits();
+
+
+            int x, y = 0;
+            y = 4 * bmp.Width;
+            int index = 0;
             for (int i = 0; i < bmp.Width; i++)
             {
+                x = 4 * i;
+                index = x - y;
                 for (int j = 0; j < bmp.Height; j++)
                 {
-                    int index = (i + j * bmp.Width) * 4;
-                   // lockbmp.SetPixel(i, j, Color.FromArgb(backBuffer[index + 3], backBuffer[index + 2], backBuffer[index + 1], backBuffer[index]));
+                    index += y;
+                    lockbmp.SetPixel(i, j, Color.FromArgb(backBuffer[index + 3], backBuffer[index + 2], backBuffer[index + 1], backBuffer[index]));
                 }
 
             }
-
             lockbmp.UnlockBits();
             grfc.Clear(Color.Red);
             grfc.DrawImage(bmp, new Point(0, 0));
         }
+
 
         // Called to put a pixel on screen at a specific X,Y coordinates
         public void PutPixel(int x, int y, Color color)
