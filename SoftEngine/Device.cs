@@ -35,25 +35,16 @@ namespace SoftEngine
         // into the front buffer. 
         public void Present(Graphics grfc)
         {
-            //using (var stream = bmp.AsStream())
-            //{
-            //    // writing our byte[] back buffer into our WriteableBitmap stream
-            //    stream.Write(backBuffer, 0, backBuffer.Length);
-            //}
-            //// request a redraw of the entire bitmap
-            //bmp.Invalidate();
-            LockBitmap lockbmp = new LockBitmap(bmp);
+            PointBitmap lockbmp = new PointBitmap(bmp);
             lockbmp.LockBits();
             for (int i = 0; i < bmp.Width; i++)
             {
                 for (int j = 0; j < bmp.Height; j++)
-
                 {
-                    //  Console.WriteLine("颜色",backBuffer[i * j + 3].ToString(),":", backBuffer[i * j + 2].ToString(), ":",backBuffer[i * j + 1].ToString() + ":"+ backBuffer[i * j + 0].ToString());
-                    //bmp.SetPixel(i, j, Color.FromArgb(255, 0, 0, 0));
-                    lockbmp.SetPixel(i, j, Color.FromArgb(backBuffer[(i + j * bmp.Width) * 4 + 3], backBuffer[(i + j * bmp.Width) * 4 + 2], backBuffer[(i + j * bmp.Width) * 4 + 1], backBuffer[(i + j * bmp.Width) * 4]));
+                    int index = (i + j * bmp.Width) * 4;
+                   // lockbmp.SetPixel(i, j, Color.FromArgb(backBuffer[index + 3], backBuffer[index + 2], backBuffer[index + 1], backBuffer[index]));
                 }
-                //   bmp.SetPixel(i, j, Color.FromArgb(backBuffer[i * j + 3], backBuffer[i * j + 2], backBuffer[i * j + 1], backBuffer[i * j]));
+
             }
 
             lockbmp.UnlockBits();
