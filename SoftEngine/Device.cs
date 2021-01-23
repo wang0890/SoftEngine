@@ -42,7 +42,8 @@ namespace SoftEngine
             //}
             //// request a redraw of the entire bitmap
             //bmp.Invalidate();
-
+            LockBitmap lockbmp = new LockBitmap(bmp);
+            lockbmp.LockBits();
             for (int i = 0; i < bmp.Width; i++)
             {
                 for (int j = 0; j < bmp.Height; j++)
@@ -50,24 +51,14 @@ namespace SoftEngine
                 {
                     //  Console.WriteLine("颜色",backBuffer[i * j + 3].ToString(),":", backBuffer[i * j + 2].ToString(), ":",backBuffer[i * j + 1].ToString() + ":"+ backBuffer[i * j + 0].ToString());
                     //bmp.SetPixel(i, j, Color.FromArgb(255, 0, 0, 0));
-                    bmp.SetPixel(i, j, Color.FromArgb(backBuffer[(i + j * bmp.Width) * 4 + 3], backBuffer[(i + j * bmp.Width) * 4 + 2], backBuffer[(i + j * bmp.Width) * 4 + 1], backBuffer[(i + j * bmp.Width) * 4]));
+                    lockbmp.SetPixel(i, j, Color.FromArgb(backBuffer[(i + j * bmp.Width) * 4 + 3], backBuffer[(i + j * bmp.Width) * 4 + 2], backBuffer[(i + j * bmp.Width) * 4 + 1], backBuffer[(i + j * bmp.Width) * 4]));
                 }
                 //   bmp.SetPixel(i, j, Color.FromArgb(backBuffer[i * j + 3], backBuffer[i * j + 2], backBuffer[i * j + 1], backBuffer[i * j]));
             }
+
+            lockbmp.UnlockBits();
             grfc.Clear(Color.Red);
             grfc.DrawImage(bmp, new Point(0, 0));
-
-
-            //Bitmap canvans = new Bitmap(800, 600);
-
-            //for (int i = 0; i < canvans.Width ; i++)
-            //{
-            //    for (int j = 0; j < canvans.Height; j++)
-
-            //        canvans.SetPixel(i, j, Color.Red);
-            //}
-
-            //grfc.DrawImage(canvans, new Point(0, 0));
         }
 
         // Called to put a pixel on screen at a specific X,Y coordinates
