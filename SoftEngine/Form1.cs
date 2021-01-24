@@ -83,7 +83,7 @@ namespace SoftEngine
             device.Render(mera, mesh);
             // Flushing the back buffer into the front buffer
             device.Present(grfc);
-            grfc.DrawString((stopwatch.ElapsedMilliseconds - runTIme).ToString(), new Font("宋体", 28), new SolidBrush(Color.Blue), new PointF(160, 160));
+            grfc.DrawString((stopwatch.ElapsedMilliseconds - runTIme).ToString(), new Font("宋体", 28), new SolidBrush(Color.Blue), new PointF(10, 10));
             runTIme = stopwatch.ElapsedMilliseconds;
         }
 
