@@ -49,18 +49,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Camera.cs" />
-    <Compile Include="Device.cs" />
+    <Compile Include="Code\Camera.cs" />
+    <Compile Include="Code\Device.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
-    <Compile Include="LockBitmap.cs" />
-    <Compile Include="Mesh.cs" />
-    <Compile Include="PointBitmap.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="Code\LockBitmap.cs" />
+    <Compile Include="Code\Mesh.cs" />
+    <Compile Include="Code\PointBitmap.cs" />
+    <Compile Include="Code\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
