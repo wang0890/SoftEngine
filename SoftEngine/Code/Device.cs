@@ -100,6 +100,48 @@ namespace SoftEngine
                 PutPixel((int)point.X, (int)point.Y, Color.FromArgb(255, 255, 255, 255));
             }
         }
+        public void DrawLine(Vector2 point0, Vector2 point1)
+        {
+            var dist = (point1 - point0).Length();
+
+            // If the distance between the 2 points is less than 2 pixels
+            // We're exiting
+            if (dist < 2)
+                return;
+
+            // Find the middle point between first & second point
+            Vector2 middlePoint = point0 + (point1 - point0) / 2;
+            // We draw this point on screen
+            DrawPoint(middlePoint);
+            // Recursive algorithm launched between first & middle point
+            // and between middle s& second point
+            DrawLine(point0, middlePoint);
+            DrawLine(middlePoint, point1);
+        }
+
+        public void DrawBline(Vector2 point0, Vector2 point1)
+        {
+            int x0 = (int)point0.X;
+            int y0 = (int)point0.Y;
+            int x1 = (int)point1.X;
+            int y1 = (int)point1.Y;
+
+            var dx = Math.Abs(x1 - x0);
+            var dy = Math.Abs(y1 - y0);
+            var sx = (x0 < x1) ? 1 : -1;
+            var sy = (y0 < y1) ? 1 : -1;
+            var err = dx - dy;
+
+            while (true)
+            {
+                DrawPoint(new Vector2(x0, y0));
+
+                if ((x0 == x1) && (y0 == y1)) break;
+                var e2 = 2 * err;
+                if (e2 > -dy) { err -= dy; x0 += sx; }
+                if (e2 < dx) { err += dx; y0 += sy; }
+            }
+        }
 
         // The main method of the engine that re-compute each vertex projection
         // during each frame
@@ -120,12 +162,19 @@ namespace SoftEngine
 
                 var transformMatrix = worldMatrix * viewMatrix * projectionMatrix;
 
-                foreach (var vertex in mesh.Vertices)
+                foreach (var face in mesh.Faces)
                 {
-                    // First, we project the 3D coordinates into the 2D space
-                    var point = Project(vertex, transformMatrix);
-                    // Then we can draw on screen
-                    DrawPoint(point);
+                    var vertexA = mesh.Vertices[face.A];
+                    var vertexB = mesh.Vertices[face.B];
+                    var vertexC = mesh.Vertices[face.C];
+
+                    var pixelA = Project(vertexA, transformMatrix);
+                    var pixelB = Project(vertexB, transformMatrix);
+                    var pixelC = Project(vertexC, transformMatrix);
+
+                    DrawBline(pixelA, pixelB);
+                    DrawBline(pixelB, pixelC);
+                    DrawBline(pixelC, pixelA);
                 }
             }
         }
