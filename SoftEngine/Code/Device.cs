@@ -70,17 +70,13 @@ namespace SoftEngine
             int x, y = 0;
             y = 4 * bmp.Width;
             int index = 0;
-            for (int i = 0; i < bmp.Width; i++)
-            {
-                x = 4 * i;
-                index = x - y;
-                for (int j = 0; j < bmp.Height; j++)
-                {
-                    index += y;
-                    lockbmp.SetPixel(i, j, Color.FromArgb(backBuffer[index + 3], backBuffer[index + 2], backBuffer[index + 1], backBuffer[index]));
-                }
-
-            }
+            Parallel.For(0, renderWidth - 1, i =>
+           {
+               for (int j = 0; j < renderHeight; j++)
+               {
+                   lockbmp.SetPixel(i, j, Color.FromArgb(backBuffer[(i + j * renderWidth) * 4 + 3], backBuffer[(i + j * renderWidth) * 4 + 2], backBuffer[(i + j * renderWidth) * 4 + 1], backBuffer[(i + j * renderWidth) * 4]));
+               }
+           });
             lockbmp.UnlockBits();
             grfc.Clear(Color.Red);
             grfc.DrawImage(bmp, new Point(0, 0));
