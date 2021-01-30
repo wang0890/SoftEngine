@@ -93,10 +93,10 @@ namespace SoftEngine
             depthBuffer[index] = z;
 
 
-            backBuffer[index] = color.B;
-            backBuffer[index + 1] = color.G;
-            backBuffer[index + 2] = color.R;
-            backBuffer[index + 3] = color.A;
+            backBuffer[index4] = color.B;
+            backBuffer[index4 + 1] = color.G;
+            backBuffer[index4 + 2] = color.R;
+            backBuffer[index4 + 3] = color.A;
         }
 
         // Project takes some 3D coordinates and transform them
