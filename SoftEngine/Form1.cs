@@ -70,14 +70,14 @@ namespace SoftEngine
             foreach (var mesh in meshes)
             {
                 // rotating slightly the meshes during each frame rendered
-                mesh.Rotation = new Vector3(mesh.Rotation.X + 0.01f, mesh.Rotation.Y + 0.01f, mesh.Rotation.Z);
+                mesh.Rotation = new Vector3(mesh.Rotation.X + 0.02f, mesh.Rotation.Y + 0.02f, mesh.Rotation.Z);
             }
 
             // Doing the various matrix operations
             device.Render(mera, meshes);
             // Flushing the back buffer into the front buffer
             device.Present(grfc);
-            grfc.DrawString((stopwatch.ElapsedMilliseconds - runTIme).ToString(), new Font("宋体", 28), new SolidBrush(Color.Blue), new PointF(10, 10));
+            grfc.DrawString((1000 / (stopwatch.ElapsedMilliseconds - runTIme)).ToString(), new Font("宋体", 28), new SolidBrush(Color.Blue), new PointF(10, 10));
             runTIme = stopwatch.ElapsedMilliseconds;
         }
 

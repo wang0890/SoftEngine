@@ -66,16 +66,15 @@ namespace SoftEngine
         {
             lockbmp.LockBits();
 
-
             int x, y = 0;
             y = 4 * bmp.Width;
-            int index = 0;
             Parallel.For(0, renderWidth - 1, i =>
            {
-               for (int j = 0; j < renderHeight; j++)
+               Parallel.For(0, renderHeight - 1, j =>
                {
-                   lockbmp.SetPixel(i, j, Color.FromArgb(backBuffer[(i + j * renderWidth) * 4 + 3], backBuffer[(i + j * renderWidth) * 4 + 2], backBuffer[(i + j * renderWidth) * 4 + 1], backBuffer[(i + j * renderWidth) * 4]));
-               }
+                   int index = (i + j * renderWidth) * 4;
+                   lockbmp.SetPixel(i, j, Color.FromArgb(backBuffer[index + 3], backBuffer[index + 2], backBuffer[index + 1], backBuffer[index]));
+               });
            });
             lockbmp.UnlockBits();
             grfc.Clear(Color.Red);
