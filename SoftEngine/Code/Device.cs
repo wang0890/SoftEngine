@@ -17,14 +17,27 @@ namespace SoftEngine
         private Bitmap bmp;
         PointBitmap lockbmp;
 
+        private object[] lockBuffer;
+
+        private readonly int renderWidth;
+        private readonly int renderHeight;
         public Device(Bitmap bmp)
         {
             this.bmp = bmp;
             // the back buffer size is equal to the number of pixels to draw
             // on screen (width*height) * 4 (R,G,B & Alpha values). 
+            renderWidth = bmp.Width;
+            renderHeight = bmp.Height;
             backBuffer = new byte[bmp.Width * bmp.Height * 4];
             lockbmp = new PointBitmap(bmp);
             depthBuffer = new float[bmp.Width * bmp.Height];
+
+            lockBuffer = new object[bmp.Width * bmp.Height];
+
+            for (var i = 0; i < lockBuffer.Length; i++)
+            {
+                lockBuffer[i] = new object();
+            }
 
         }
 
@@ -82,21 +95,23 @@ namespace SoftEngine
             // on the 2D coordinates on screen
 
 
-            var index = (x + y * bmp.Width);
+            var index = (x + y * renderWidth);
             var index4 = index * 4;
-
-            if (depthBuffer[index] < z)
+            lock (lockBuffer[index])
             {
-                return; // Discard
+                if (depthBuffer[index] < z)
+                {
+                    return; // Discard
+                }
+
+                depthBuffer[index] = z;
+
+
+                backBuffer[index4] = color.B;
+                backBuffer[index4 + 1] = color.G;
+                backBuffer[index4 + 2] = color.R;
+                backBuffer[index4 + 3] = color.A;
             }
-
-            depthBuffer[index] = z;
-
-
-            backBuffer[index4] = color.B;
-            backBuffer[index4 + 1] = color.G;
-            backBuffer[index4 + 2] = color.R;
-            backBuffer[index4 + 3] = color.A;
         }
 
         // Project takes some 3D coordinates and transform them
@@ -108,16 +123,16 @@ namespace SoftEngine
             // The transformed coordinates will be based on coordinate system
             // starting on the center of the screen. But drawing on screen normally starts
             // from top left. We then need to transform them again to have x:0, y:0 on top left.
-            var x = point.X / transMat.M44 + bmp.Width / 2.0f;
-            var y = -point.Y / transMat.M44 + bmp.Height / 2.0f;
+            var x = point.X / transMat.M44 + renderWidth / 2.0f;
+            var y = -point.Y / transMat.M44 + renderHeight / 2.0f;
             return (new Vector3(x, y, point.Z));
         }
 
         // DrawPoint calls PutPixel but does the clipping operation before
-        public void DrawPoint(Vector3 point,Color color)
+        public void DrawPoint(Vector3 point, Color color)
         {
             // Clipping what's visible on screen
-            if (point.X >= 0 && point.Y >= 0 && point.X < bmp.Width && point.Y < bmp.Height)
+            if (point.X >= 0 && point.Y >= 0 && point.X < renderWidth && point.Y < renderHeight)
             {
                 // Drawing a yellow point
                 PutPixel((int)point.X, (int)point.Y, point.Z, color);
@@ -259,6 +274,35 @@ namespace SoftEngine
                     }
                 }
             }
+
+            //if (dP1P2 > dP1P3)
+            //{
+            //    Parallel.For((int)p1.Y, (int)p3.Y + 1, y =>
+            //        {
+            //            if (y < p2.Y)
+            //            {
+            //                ProcessScanLine(y, p1, p3, p1, p2, color);
+            //            }
+            //            else
+            //            {
+            //                ProcessScanLine(y, p1, p3, p2, p3, color);
+            //            }
+            //        });
+            //}
+            //else
+            //{
+            //    Parallel.For((int)p1.Y, (int)p3.Y + 1, y =>
+            //        {
+            //            if (y < p2.Y)
+            //            {
+            //                ProcessScanLine(y, p1, p2, p1, p3, color);
+            //            }
+            //            else
+            //            {
+            //                ProcessScanLine(y, p2, p3, p1, p3, color);
+            //            }
+            //        });
+            //}
         }
 
         // The main method of the engine that re-compute each vertex projection
@@ -280,9 +324,9 @@ namespace SoftEngine
 
                 var transformMatrix = worldMatrix * viewMatrix * projectionMatrix;
 
-                var faceIndex = 0;
-                foreach (var face in mesh.Faces)
+                Parallel.For(0, mesh.Faces.Length, faceIndex =>
                 {
+                    var face = mesh.Faces[faceIndex];
                     var vertexA = mesh.Vertices[face.A];
                     var vertexB = mesh.Vertices[face.B];
                     var vertexC = mesh.Vertices[face.C];
@@ -292,9 +336,9 @@ namespace SoftEngine
                     var pixelC = Project(vertexC, transformMatrix);
 
                     var color = 0.25f + (faceIndex % mesh.Faces.Length) * 0.75f / mesh.Faces.Length;
-                    DrawTriangle(pixelA, pixelB, pixelC,  Color.FromArgb((int)(color*255), (int)(color * 255), (int)(color * 255), 255));
+                    DrawTriangle(pixelA, pixelB, pixelC, Color.FromArgb((int)(color * 255), (int)(color * 255), (int)(color * 255), 255));
                     faceIndex++;
-                }
+                });
             }
         }
         // Loading the JSON file in an asynchronous manner
