@@ -292,7 +292,7 @@ namespace SoftEngine
                     var pixelC = Project(vertexC, transformMatrix);
 
                     var color = 0.25f + (faceIndex % mesh.Faces.Length) * 0.75f / mesh.Faces.Length;
-                    DrawTriangle(pixelA, pixelB, pixelC,  Color.FromArgb((int)color*255, (int)color * 255, (int)color * 255, 255));
+                    DrawTriangle(pixelA, pixelB, pixelC,  Color.FromArgb((int)(color*255), (int)(color * 255), (int)(color * 255), 255));
                     faceIndex++;
                 }
             }
