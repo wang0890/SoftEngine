@@ -111,16 +111,23 @@ namespace SoftEngine
 
         // Project takes some 3D coordinates and transform them
         // in 2D coordinates using the transformation matrix
-        public Vector3 Project(Vector3 coord, Matrix4x4 transMat)
+        public Vertex Project(Vertex vertex, Matrix4x4 transMat, Matrix4x4 world)
         {
             // transforming the coordinates
-            var point = Vector3.Transform(coord, transMat);
+            var point = Vector3.Transform(vertex.Coordinates, transMat);
+            var point3dWorld = Vector3.Transform(vertex.Coordinates, world);
+            var normal3dWorld = Vector3.Transform(vertex.Normal, world);
             // The transformed coordinates will be based on coordinate system
             // starting on the center of the screen. But drawing on screen normally starts
             // from top left. We then need to transform them again to have x:0, y:0 on top left.
             var x = point.X / transMat.M44 + renderWidth / 2.0f;
             var y = -point.Y / transMat.M44 + renderHeight / 2.0f;
-            return (new Vector3(x, y, point.Z));
+            return new Vertex
+            {
+                Coordinates = new Vector3(x, y, point.Z),
+                Normal = normal3dWorld,
+                WorldCoordinates = point3dWorld
+            };
         }
 
         // DrawPoint calls PutPixel but does the clipping operation before
@@ -136,13 +143,18 @@ namespace SoftEngine
         // drawing line between 2 points from left to right
         // papb -> pcpd
         // pa, pb, pc, pd must then be sorted before
-        void ProcessScanLine(int y, Vector3 pa, Vector3 pb, Vector3 pc, Vector3 pd, Color color)
+        void ProcessScanLine(ScanLineData data, Vertex va, Vertex vb, Vertex vc, Vertex vd, Color color)
         {
+            Vector3 pa = va.Coordinates;
+            Vector3 pb = vb.Coordinates;
+            Vector3 pc = vc.Coordinates;
+            Vector3 pd = vd.Coordinates;
+
             // Thanks to current Y, we can compute the gradient to compute others values like
             // the starting X (sx) and ending X (ex) to draw between
             // if pa.Y == pb.Y or pc.Y == pd.Y, gradient is forced to 1
-            var gradient1 = pa.Y != pb.Y ? (y - pa.Y) / (pb.Y - pa.Y) : 1;
-            var gradient2 = pc.Y != pd.Y ? (y - pc.Y) / (pd.Y - pc.Y) : 1;
+            var gradient1 = pa.Y != pb.Y ? (data.currentY - pa.Y) / (pb.Y - pa.Y) : 1;
+            var gradient2 = pc.Y != pd.Y ? (data.currentY - pc.Y) / (pd.Y - pc.Y) : 1;
 
             int sx = (int)Interpolate(pa.X, pb.X, gradient1);
             int ex = (int)Interpolate(pc.X, pd.X, gradient2);
@@ -157,7 +169,10 @@ namespace SoftEngine
                 float gradient = (x - sx) / (float)(ex - sx);
 
                 var z = Interpolate(z1, z2, gradient);
-                DrawPoint(new Vector3(x, y, z), color);
+                var ndotl = data.ndotla;
+                // changing the color value using the cosine of the angle
+                // between the light vector and the normal vector
+                DrawPoint(new Vector3(x, data.currentY, z), Color.FromArgb((int)(color.A * ndotl), (int)(color.R * ndotl), (int)(color.G * ndotl), (int)(color.B * ndotl)));
             }
         }
 
@@ -176,33 +191,59 @@ namespace SoftEngine
             return min + (max - min) * Clamp(gradient);
         }
 
+        // Compute the cosine of the angle between the light vector and the normal vector
+        // Returns a value between 0 and 1
+        float ComputeNDotL(Vector3 vertex, Vector3 normal, Vector3 lightPosition)
+        {
+            var lightDirection = lightPosition - vertex;
 
+            normal = Vector3.Normalize(normal);
+            lightDirection = Vector3.Normalize(lightDirection);
 
-        public void DrawTriangle(Vector3 p1, Vector3 p2, Vector3 p3, Color color)
+            return Math.Max(0, Vector3.Dot(normal, lightDirection));
+        }
+
+        public void DrawTriangle(Vertex v1, Vertex v2, Vertex v3, Color color)
         {
             // Sorting the points in order to always have this order on screen p1, p2 & p3
             // with p1 always up (thus having the Y the lowest possible to be near the top screen)
             // then p2 between p1 & p3
-            if (p1.Y > p2.Y)
+            if (v1.Coordinates.Y > v2.Coordinates.Y)
             {
-                var temp = p2;
-                p2 = p1;
-                p1 = temp;
+                var temp = v2;
+                v2 = v1;
+                v1 = temp;
             }
 
-            if (p2.Y > p3.Y)
+            if (v2.Coordinates.Y > v3.Coordinates.Y)
             {
-                var temp = p2;
-                p2 = p3;
-                p3 = temp;
+                var temp = v2;
+                v2 = v3;
+                v3 = temp;
             }
 
-            if (p1.Y > p2.Y)
+            if (v1.Coordinates.Y > v2.Coordinates.Y)
             {
-                var temp = p2;
-                p2 = p1;
-                p1 = temp;
+                var temp = v2;
+                v2 = v1;
+                v1 = temp;
             }
+
+            Vector3 p1 = v1.Coordinates;
+            Vector3 p2 = v2.Coordinates;
+            Vector3 p3 = v3.Coordinates;
+
+            // normal face's vector is the average normal between each vertex's normal
+            // computing also the center point of the face
+            Vector3 vnFace = (v1.Normal + v2.Normal + v3.Normal) / 3;
+            Vector3 centerPoint = (v1.WorldCoordinates + v2.WorldCoordinates + v3.WorldCoordinates) / 3;
+            // Light position 
+            Vector3 lightPos = new Vector3(0, 10, 10);
+            // computing the cos of the angle between the light vector and the normal vector
+            // it will return a value between 0 and 1 that will be used as the intensity of the color
+            float ndotl = ComputeNDotL(centerPoint, vnFace, lightPos);
+
+            var data = new ScanLineData { ndotla = ndotl };
 
             // computing lines' directions
             float dP1P2, dP1P3;
@@ -234,13 +275,15 @@ namespace SoftEngine
             {
                 for (var y = (int)p1.Y; y <= (int)p3.Y; y++)
                 {
+                    data.currentY = y;
+
                     if (y < p2.Y)
                     {
-                        ProcessScanLine(y, p1, p3, p1, p2, color);
+                        ProcessScanLine(data, v1, v3, v1, v2, color);
                     }
                     else
                     {
-                        ProcessScanLine(y, p1, p3, p2, p3, color);
+                        ProcessScanLine(data, v1, v3, v2, v3, color);
                     }
                 }
             }
@@ -259,45 +302,18 @@ namespace SoftEngine
             {
                 for (var y = (int)p1.Y; y <= (int)p3.Y; y++)
                 {
+                    data.currentY = y;
+
                     if (y < p2.Y)
                     {
-                        ProcessScanLine(y, p1, p2, p1, p3, color);
+                        ProcessScanLine(data, v1, v2, v1, v3, color);
                     }
                     else
                     {
-                        ProcessScanLine(y, p2, p3, p1, p3, color);
+                        ProcessScanLine(data, v2, v3, v1, v3, color);
                     }
                 }
             }
-
-            //if (dP1P2 > dP1P3)
-            //{
-            //    Parallel.For((int)p1.Y, (int)p3.Y + 1, y =>
-            //        {
-            //            if (y < p2.Y)
-            //            {
-            //                ProcessScanLine(y, p1, p3, p1, p2, color);
-            //            }
-            //            else
-            //            {
-            //                ProcessScanLine(y, p1, p3, p2, p3, color);
-            //            }
-            //        });
-            //}
-            //else
-            //{
-            //    Parallel.For((int)p1.Y, (int)p3.Y + 1, y =>
-            //        {
-            //            if (y < p2.Y)
-            //            {
-            //                ProcessScanLine(y, p1, p2, p1, p3, color);
-            //            }
-            //            else
-            //            {
-            //                ProcessScanLine(y, p2, p3, p1, p3, color);
-            //            }
-            //        });
-            //}
         }
 
         // The main method of the engine that re-compute each vertex projection
@@ -326,9 +342,9 @@ namespace SoftEngine
                     var vertexB = mesh.Vertices[face.B];
                     var vertexC = mesh.Vertices[face.C];
 
-                    var pixelA = Project(vertexA, transformMatrix);
-                    var pixelB = Project(vertexB, transformMatrix);
-                    var pixelC = Project(vertexC, transformMatrix);
+                    var pixelA = Project(vertexA, transformMatrix, worldMatrix);
+                    var pixelB = Project(vertexB, transformMatrix, worldMatrix);
+                    var pixelC = Project(vertexC, transformMatrix, worldMatrix);
 
                     var color = 0.25f + (faceIndex % mesh.Faces.Length) * 0.75f / mesh.Faces.Length;
                     DrawTriangle(pixelA, pixelB, pixelC, Color.FromArgb((int)(color * 255), (int)(color * 255), (int)(color * 255), 255));
@@ -384,7 +400,11 @@ namespace SoftEngine
                     var x = (float)verticesArray[index * verticesStep].Value;
                     var y = (float)verticesArray[index * verticesStep + 1].Value;
                     var z = (float)verticesArray[index * verticesStep + 2].Value;
-                    mesh.Vertices[index] = new Vector3(x, y, z);
+                    // Loading the vertex normal exported by Blender
+                    var nx = (float)verticesArray[index * verticesStep + 3].Value;
+                    var ny = (float)verticesArray[index * verticesStep + 4].Value;
+                    var nz = (float)verticesArray[index * verticesStep + 5].Value;
+                    mesh.Vertices[index] = new Vertex { Coordinates = new Vector3(x, y, z), Normal = new Vector3(nx, ny, nz) };
                 }
 
                 // Then filling the Faces array

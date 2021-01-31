@@ -61,6 +61,7 @@
     <Compile Include="Code\Camera.cs" />
     <Compile Include="Code\Device.cs" />
     <Compile Include="Code\Face.cs" />
+    <Compile Include="Code\ScanLineData.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
