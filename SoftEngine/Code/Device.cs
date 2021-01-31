@@ -66,8 +66,6 @@ namespace SoftEngine
         {
             lockbmp.LockBits();
 
-            int x, y = 0;
-            y = 4 * bmp.Width;
             Parallel.For(0, renderWidth - 1, i =>
            {
                Parallel.For(0, renderHeight - 1, j =>
