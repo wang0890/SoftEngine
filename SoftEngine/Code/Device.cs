@@ -161,13 +161,17 @@ namespace SoftEngine
             float z1 = Interpolate(pa.Z, pb.Z, gradient1);
             float z2 = Interpolate(pc.Z, pd.Z, gradient2);
 
+
+            var snl = Interpolate(data.ndotla, data.ndotlb, gradient1);
+            var enl = Interpolate(data.ndotlc, data.ndotld, gradient2);
+
             // drawing a line from left (sx) to right (ex) 
             for (var x = sx; x < ex; x++)
             {
                 float gradient = (x - sx) / (float)(ex - sx);
 
                 var z = Interpolate(z1, z2, gradient);
-                var ndotl = data.ndotla;
+                var ndotl = Interpolate(snl, enl, gradient); ;
                 // changing the color value using the cosine of the angle
                 // between the light vector and the normal vector
                 DrawPoint(new Vector3(x, data.currentY, z), Color.FromArgb((int)(color.A * ndotl), (int)(color.R * ndotl), (int)(color.G * ndotl), (int)(color.B * ndotl)));
@@ -231,17 +235,15 @@ namespace SoftEngine
             Vector3 p2 = v2.Coordinates;
             Vector3 p3 = v3.Coordinates;
 
-            // normal face's vector is the average normal between each vertex's normal
-            // computing also the center point of the face
-            Vector3 vnFace = (v1.Normal + v2.Normal + v3.Normal) / 3;
-            Vector3 centerPoint = (v1.WorldCoordinates + v2.WorldCoordinates + v3.WorldCoordinates) / 3;
             // Light position 
             Vector3 lightPos = new Vector3(0, 10, 10);
             // computing the cos of the angle between the light vector and the normal vector
             // it will return a value between 0 and 1 that will be used as the intensity of the color
-            float ndotl = ComputeNDotL(centerPoint, vnFace, lightPos);
+            float nl1 = ComputeNDotL(v1.WorldCoordinates, v1.Normal, lightPos);
+            float nl2 = ComputeNDotL(v2.WorldCoordinates, v2.Normal, lightPos);
+            float nl3 = ComputeNDotL(v3.WorldCoordinates, v3.Normal, lightPos);
 
-            var data = new ScanLineData { ndotla = ndotl };
+            var data = new ScanLineData { };
 
             // computing lines' directions
             float dP1P2, dP1P3;
@@ -277,10 +279,18 @@ namespace SoftEngine
 
                     if (y < p2.Y)
                     {
+                        data.ndotla = nl1;
+                        data.ndotlb = nl3;
+                        data.ndotlc = nl1;
+                        data.ndotld = nl2;
                         ProcessScanLine(data, v1, v3, v1, v2, color);
                     }
                     else
                     {
+                        data.ndotla = nl1;
+                        data.ndotlb = nl3;
+                        data.ndotlc = nl2;
+                        data.ndotld = nl3;
                         ProcessScanLine(data, v1, v3, v2, v3, color);
                     }
                 }
@@ -304,10 +314,18 @@ namespace SoftEngine
 
                     if (y < p2.Y)
                     {
+                        data.ndotla = nl1;
+                        data.ndotlb = nl2;
+                        data.ndotlc = nl1;
+                        data.ndotld = nl3;
                         ProcessScanLine(data, v1, v2, v1, v3, color);
                     }
                     else
                     {
+                        data.ndotla = nl2;
+                        data.ndotlb = nl3;
+                        data.ndotlc = nl1;
+                        data.ndotld = nl3;
                         ProcessScanLine(data, v2, v3, v1, v3, color);
                     }
                 }
