@@ -124,7 +124,8 @@ namespace SoftEngine
             {
                 Coordinates = new Vector3(x, y, point.Z),
                 Normal = normal3dWorld,
-                WorldCoordinates = point3dWorld
+                WorldCoordinates = point3dWorld,
+                TextureCoordinates = vertex.TextureCoordinates
             };
         }
 

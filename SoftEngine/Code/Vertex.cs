@@ -7,12 +7,11 @@ using System.Threading.Tasks;
 
 namespace SoftEngine
 {
-    public struct Face
+    public struct Vertex
     {
-        public int A;
-        public int B;
-        public int C;
-
         public Vector3 Normal;
+        public Vector3 Coordinates;
+        public Vector3 WorldCoordinates;
+        public Vector2 TextureCoordinates;
     }
 }
