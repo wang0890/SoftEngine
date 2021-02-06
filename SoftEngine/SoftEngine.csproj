@@ -61,6 +61,7 @@
     <Compile Include="Code\Camera.cs" />
     <Compile Include="Code\Device.cs" />
     <Compile Include="Code\Face.cs" />
+    <Compile Include="Code\Material.cs" />
     <Compile Include="Code\ScanLineData.cs" />
     <Compile Include="Code\Texture.cs" />
     <Compile Include="Code\Vertex.cs" />
@@ -78,7 +79,9 @@
     <Content Include="Json\monkey.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Suzanne.jpg" />
+    <Content Include="Suzanne.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
