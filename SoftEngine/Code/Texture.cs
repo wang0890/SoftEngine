@@ -56,8 +56,8 @@ namespace SoftEngine
 
             LockBitmap bitMap = new LockBitmap(new Bitmap(filename));
             bitMap.LockBits();
-            bitMap.UnlockBits();
             internalBuffer = bitMap.Pixels;
+            bitMap.UnlockBits();
         }
 
         public byte[] GetPictureData(string imagePath)
@@ -93,13 +93,13 @@ namespace SoftEngine
             int v = Math.Abs((int)(tv * height) % height);
 
             int pos = (u + v * width) * 3;
-            Console.WriteLine(pos);
+           // Console.WriteLine(pos);
             byte b = internalBuffer[pos];
             byte g = internalBuffer[pos + 1];
             byte r = internalBuffer[pos + 2];
-          //  byte a = internalBuffer[pos + 3];
+            byte a = internalBuffer[pos + 3];
 
-            return Color.FromArgb(1, r, g, b);
+            return Color.FromArgb(a, r, g, b);
         }
     }
 }

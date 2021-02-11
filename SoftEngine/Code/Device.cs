@@ -47,10 +47,10 @@ namespace SoftEngine
             for (var index = 0; index < backBuffer.Length; index += 4)
             {
                 // BGRA is used by Windows instead by RGBA in HTML5
-                backBuffer[index] = b;
-                backBuffer[index + 1] = g;
-                backBuffer[index + 2] = r;
-                backBuffer[index + 3] = a;
+                backBuffer[index] = a;
+                backBuffer[index + 1] = r;
+                backBuffer[index + 2] = g;
+                backBuffer[index + 3] = b;
             }
 
             // Clearing Depth Buffer
@@ -59,26 +59,6 @@ namespace SoftEngine
                 depthBuffer[index] = float.MaxValue;
             }
         }
-
-        // Once everything is ready, we can flush the back buffer
-        // into the front buffer. 
-        public void Present(Graphics grfc)
-        {
-            lockbmp.LockBits();
-
-            Parallel.For(0, renderWidth - 1, i =>
-           {
-               Parallel.For(0, renderHeight - 1, j =>
-               {
-                   int index = (i + j * renderWidth) * 4;
-                   lockbmp.SetPixel(i, j, Color.FromArgb(backBuffer[index + 3], backBuffer[index + 2], backBuffer[index + 1], backBuffer[index]));
-               });
-           });
-            lockbmp.UnlockBits();
-            grfc.Clear(Color.Red);
-            grfc.DrawImage(bmp, new Point(0, 0));
-        }
-
 
         // Called to put a pixel on screen at a specific X,Y coordinates
         public void PutPixel(int x, int y, float z, Color color)
@@ -100,11 +80,43 @@ namespace SoftEngine
                 depthBuffer[index] = z;
 
 
-                backBuffer[index4] = color.B;
-                backBuffer[index4 + 1] = color.G;
-                backBuffer[index4 + 2] = color.R;
-                backBuffer[index4 + 3] = color.A;
+                backBuffer[index4] = color.A;
+                backBuffer[index4 + 1] = color.R;
+                backBuffer[index4 + 2] = color.G;
+                backBuffer[index4 + 3] = color.B;
             }
+        }
+
+        // Once everything is ready, we can flush the back buffer
+        // into the front buffer. 
+        public void Present(Graphics grfc)
+        {
+            lockbmp.LockBits();
+
+            Parallel.For(0, renderWidth - 1, i =>
+           {
+               Parallel.For(0, renderHeight - 1, j =>
+               {
+                   int index = (i + j * renderWidth) * 4;
+                   lockbmp.SetPixel(i, j, Color.FromArgb(backBuffer[index], backBuffer[index + 1], backBuffer[index + 2], backBuffer[index + 3]));
+               });
+           });
+            lockbmp.UnlockBits();
+            grfc.Clear(Color.Black);
+            grfc.DrawImage(bmp, new Point(0, 0));
+        }
+        // Clamping values to keep them between 0 and 1
+        float Clamp(float value, float min = 0, float max = 1)
+        {
+            return Math.Max(min, Math.Min(value, max));
+        }
+
+        // Interpolating the value between 2 vertices 
+        // min is the starting point, max the ending point
+        // and gradient the % between the 2 points
+        float Interpolate(float min, float max, float gradient)
+        {
+            return min + (max - min) * Clamp(gradient);
         }
 
         // Project takes some 3D coordinates and transform them
@@ -128,6 +140,22 @@ namespace SoftEngine
                 TextureCoordinates = vertex.TextureCoordinates
             };
         }
+
+        // Compute the cosine of the angle between the light vector and the normal vector
+        // Returns a value between 0 and 1
+        float ComputeNDotL(Vector3 vertex, Vector3 normal, Vector3 lightPosition)
+        {
+            var lightDirection = lightPosition - vertex;
+
+            normal = Vector3.Normalize(normal);
+            lightDirection = Vector3.Normalize(lightDirection);
+
+            return Math.Max(0, Vector3.Dot(normal, lightDirection));
+        }
+
+
+
+
 
         // DrawPoint calls PutPixel but does the clipping operation before
         public void DrawPoint(Vector3 point, Color color)
@@ -190,36 +218,13 @@ namespace SoftEngine
                     textureColor = Color.White;
                 // changing the color value using the cosine of the angle
                 // between the light vector and the normal vector
-                DrawPoint(new Vector3(x, data.currentY, z), Color.FromArgb((int)(color.A * ndotl * textureColor.A / 255f), (int)(color.R * ndotl * textureColor.R / 255f), (int)(color.G * ndotl * textureColor.G / 255f), (int)(color.B * ndotl * textureColor.B / 255f)));
+                DrawPoint(new Vector3(x, data.currentY, z), Color.FromArgb((int)(ndotl * textureColor.A), (int)(ndotl * textureColor.R), (int)(ndotl * textureColor.G), (int)(ndotl * textureColor.B)));
             }
         }
 
 
-        // Clamping values to keep them between 0 and 1
-        float Clamp(float value, float min = 0, float max = 1)
-        {
-            return Math.Max(min, Math.Min(value, max));
-        }
 
-        // Interpolating the value between 2 vertices 
-        // min is the starting point, max the ending point
-        // and gradient the % between the 2 points
-        float Interpolate(float min, float max, float gradient)
-        {
-            return min + (max - min) * Clamp(gradient);
-        }
 
-        // Compute the cosine of the angle between the light vector and the normal vector
-        // Returns a value between 0 and 1
-        float ComputeNDotL(Vector3 vertex, Vector3 normal, Vector3 lightPosition)
-        {
-            var lightDirection = lightPosition - vertex;
-
-            normal = Vector3.Normalize(normal);
-            lightDirection = Vector3.Normalize(lightDirection);
-
-            return Math.Max(0, Vector3.Dot(normal, lightDirection));
-        }
 
         public void DrawTriangle(Vertex v1, Vertex v2, Vertex v3, Color color, Texture texture)
         {
