@@ -410,13 +410,21 @@ namespace SoftEngine
                 // Beware to apply rotation before translation 
                 var worldMatrix = Matrix4x4.CreateFromYawPitchRoll(mesh.Rotation.Y, mesh.Rotation.X, mesh.Rotation.Z) *
                                   Matrix4x4.CreateTranslation(mesh.Position);
+                var worldView = worldMatrix * viewMatrix;
 
-
-                var transformMatrix = worldMatrix * viewMatrix * projectionMatrix;
+                var transformMatrix = worldView * projectionMatrix;
 
                 Parallel.For(0, mesh.Faces.Length, faceIndex =>
                 {
                     var face = mesh.Faces[faceIndex];
+                    // Face-back culling
+                    var transformedNormal = Vector3.TransformNormal(face.Normal, worldView);
+
+                    if (transformedNormal.Z >= 0)
+                    {
+                        return;
+                    }
+
                     var vertexA = mesh.Vertices[face.A];
                     var vertexB = mesh.Vertices[face.B];
                     var vertexC = mesh.Vertices[face.C];
@@ -533,6 +541,8 @@ namespace SoftEngine
                     meshTextureName = Path.Combine(baseDirectory, meshTextureName);
                     mesh.Texture = new Texture(meshTextureName, 512, 512);
                 }
+
+                mesh.ComputeFacesNormals();
                 meshes.Add(mesh);
             }
             return meshes.ToArray();

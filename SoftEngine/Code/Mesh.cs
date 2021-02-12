@@ -1,5 +1,6 @@
 ﻿// Mesh.cs
 using System.Numerics;
+using System.Threading.Tasks;
 
 namespace SoftEngine
 {
@@ -18,6 +19,21 @@ namespace SoftEngine
             Vertices = new Vertex[verticesCount];
             Faces = new Face[facesCount];
             Name = name;
+        }
+
+        public void ComputeFacesNormals()
+        {
+            Parallel.For(0, Faces.Length, faceIndex =>
+            {
+                var face = Faces[faceIndex];
+                var vertexA = Vertices[face.A];
+                var vertexB = Vertices[face.B];
+                var vertexC = Vertices[face.C];
+
+                Faces[faceIndex].Normal = (vertexA.Normal + vertexB.Normal + vertexC.Normal) / 3.0f;
+                Faces[faceIndex].Normal=Vector3.Normalize(Faces[faceIndex].Normal);
+            });
+
         }
     }
 
