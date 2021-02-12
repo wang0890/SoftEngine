@@ -30,7 +30,7 @@ namespace SoftEngine
 
             device = new Device(bmp);
             meshes = device.LoadJSONFileAsync("Json\\monkey.txt");
-            mera.Position = new Vector3(0, 0, 0.02f);
+            mera.Position = new Vector3(0, 0, 10f);
             mera.Target = Vector3.Zero;
             stopwatch.Start();
 
@@ -70,7 +70,7 @@ namespace SoftEngine
             foreach (var mesh in meshes)
             {
                 // rotating slightly the meshes during each frame rendered
-                mesh.Rotation = new Vector3(mesh.Rotation.X + 0.02f, mesh.Rotation.Y + 0.02f, mesh.Rotation.Z);
+                mesh.Rotation = new Vector3(mesh.Rotation.X, mesh.Rotation.Y + 0.01f, mesh.Rotation.Z);
             }
 
             // Doing the various matrix operations

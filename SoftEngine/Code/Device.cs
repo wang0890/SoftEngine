@@ -7,6 +7,7 @@ using System.IO;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using System.Text;
+using System.Drawing.Drawing2D;
 
 namespace SoftEngine
 {
@@ -72,7 +73,7 @@ namespace SoftEngine
             var index4 = index * 4;
             lock (lockBuffer[index])
             {
-                if (depthBuffer[index] < z)
+                if (depthBuffer[index] <= z)
                 {
                     return; // Discard
                 }
@@ -103,6 +104,7 @@ namespace SoftEngine
            });
             lockbmp.UnlockBits();
             grfc.Clear(Color.Black);
+            grfc.CompositingMode = CompositingMode.SourceOver;
             grfc.DrawImage(bmp, new Point(0, 0));
         }
         // Clamping values to keep them between 0 and 1
@@ -130,8 +132,8 @@ namespace SoftEngine
             // The transformed coordinates will be based on coordinate system
             // starting on the center of the screen. But drawing on screen normally starts
             // from top left. We then need to transform them again to have x:0, y:0 on top left.
-            var x = point.X / transMat.M44 + renderWidth / 2.0f;
-            var y = -point.Y / transMat.M44 + renderHeight / 2.0f;
+            var x = point.X / transMat.M44 * renderWidth + renderWidth / 2.0f;
+            var y = -point.Y / transMat.M44 * renderHeight + renderHeight / 2.0f;
             return new Vertex
             {
                 Coordinates = new Vector3(x, y, point.Z),
@@ -218,7 +220,8 @@ namespace SoftEngine
                     textureColor = Color.White;
                 // changing the color value using the cosine of the angle
                 // between the light vector and the normal vector
-                DrawPoint(new Vector3(x, data.currentY, z), Color.FromArgb((int)(ndotl * textureColor.A), (int)(ndotl * textureColor.R), (int)(ndotl * textureColor.G), (int)(ndotl * textureColor.B)));
+                DrawPoint(new Vector3(x, data.currentY, z), Color.FromArgb(255, (int)(textureColor.R), (int)(textureColor.G), (int)(textureColor.B)));
+                // DrawPoint(new Vector3(x, data.currentY, z), Color.FromArgb(255, (int)(ndotl * textureColor.R), (int)(ndotl * textureColor.G), (int)(ndotl * textureColor.B)));
             }
         }
 
