@@ -57,7 +57,7 @@ namespace SoftEngine
             // Clearing Depth Buffer
             for (var index = 0; index < depthBuffer.Length; index++)
             {
-                depthBuffer[index] = float.MaxValue;
+                depthBuffer[index] = float.MinValue;
             }
         }
 
@@ -73,18 +73,24 @@ namespace SoftEngine
             var index4 = index * 4;
             lock (lockBuffer[index])
             {
-                if (depthBuffer[index] <= z)
+                if (depthBuffer[index] < z)
                 {
-                    return; // Discard
+                    depthBuffer[index] = z;
+
+
+                    backBuffer[index4] = color.A;
+                    backBuffer[index4 + 1] = color.R;
+                    backBuffer[index4 + 2] = color.G;
+                    backBuffer[index4 + 3] = color.B;
                 }
 
-                depthBuffer[index] = z;
+                //depthBuffer[index] = z;
 
 
-                backBuffer[index4] = color.A;
-                backBuffer[index4 + 1] = color.R;
-                backBuffer[index4 + 2] = color.G;
-                backBuffer[index4 + 3] = color.B;
+                //backBuffer[index4] = color.A;
+                //backBuffer[index4 + 1] = color.R;
+                //backBuffer[index4 + 2] = color.G;
+                //backBuffer[index4 + 3] = color.B;
             }
         }
 
