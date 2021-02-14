@@ -226,8 +226,9 @@ namespace SoftEngine
                     textureColor = Color.White;
                 // changing the color value using the cosine of the angle
                 // between the light vector and the normal vector
-                DrawPoint(new Vector3(x, data.currentY, z), Color.FromArgb(255, (int)(textureColor.R), (int)(textureColor.G), (int)(textureColor.B)));
-                // DrawPoint(new Vector3(x, data.currentY, z), Color.FromArgb(255, (int)(ndotl * textureColor.R), (int)(ndotl * textureColor.G), (int)(ndotl * textureColor.B)));
+                // DrawPoint(new Vector3(x, data.currentY, z), Color.FromArgb(255, (int)(textureColor.R), (int)(textureColor.G), (int)(textureColor.B)));
+                ndotl = 0.2f + ndotl * 0.8f;
+                 DrawPoint(new Vector3(x, data.currentY, z), Color.FromArgb(255,(int)(ndotl * textureColor.R), (int)(ndotl * textureColor.G), (int)(ndotl * textureColor.B)));
             }
         }
 
