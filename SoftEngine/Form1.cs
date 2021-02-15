@@ -26,7 +26,7 @@ namespace SoftEngine
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            Bitmap bmp = new Bitmap(640, 480);
+            Bitmap bmp = new Bitmap(this.Width,this.Height);
 
             device = new Device(bmp);
             meshes = device.LoadJSONFileAsync("Json\\monkey.txt");

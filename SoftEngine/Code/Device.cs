@@ -228,7 +228,7 @@ namespace SoftEngine
                 // between the light vector and the normal vector
                 // DrawPoint(new Vector3(x, data.currentY, z), Color.FromArgb(255, (int)(textureColor.R), (int)(textureColor.G), (int)(textureColor.B)));
                 ndotl = 0.2f + ndotl * 0.8f;
-                 DrawPoint(new Vector3(x, data.currentY, z), Color.FromArgb(255,(int)(ndotl * textureColor.R), (int)(ndotl * textureColor.G), (int)(ndotl * textureColor.B)));
+                DrawPoint(new Vector3(x, data.currentY, z), Color.FromArgb(255, (int)(ndotl * textureColor.R), (int)(ndotl * textureColor.G), (int)(ndotl * textureColor.B)));
             }
         }
 
@@ -430,7 +430,7 @@ namespace SoftEngine
                     // Face-back culling
                     var transformedNormal = Vector3.TransformNormal(face.Normal, worldView);
 
-                    if (transformedNormal.Z >= 0)
+                    if (transformedNormal.Z >= 0.5)
                     {
                         return;
                     }
