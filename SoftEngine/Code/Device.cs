@@ -430,7 +430,7 @@ namespace SoftEngine
                     // Face-back culling
                     var transformedNormal = Vector3.TransformNormal(face.Normal, worldView);
 
-                    if (transformedNormal.Z >= 0.5)
+                    if (transformedNormal.Z >= 0)
                     {
                         return;
                     }
